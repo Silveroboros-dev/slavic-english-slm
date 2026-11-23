@@ -1,0 +1,107 @@
+{
+  "model": "google/gemma-3/transformers/gemma-3-1b-it/1",
+  "model_revision": "Kaggle model version ID 282742",
+  "hardware": "NVIDIA L4",
+  "data_release": "gemma3-1b-full-official-clean-v2",
+  "data_sha256": "5b7a813459bf6129c08129ddf749ec5dc3655ad36225d55318b6cccc13b09429",
+  "pairs_by_corpus": {
+    "dgt": 100000,
+    "unpc": 100000,
+    "jrc": 72000,
+    "europarl": 28000
+  },
+  "pairs_by_language": {
+    "hr": 100000,
+    "ru": 100000,
+    "pl": 100000
+  },
+  "optimizer_updates": 9376,
+  "training_seconds": 7889.30262995509,
+  "model_parameters_with_adapter": 1000631424,
+  "trainable_parameters": 745472,
+  "optimizer": "fused AdamW",
+  "optimizer_settings": {
+    "adamw_lr": 0.0002,
+    "weight_decay": 0.0,
+    "gradient_clip": 1.0,
+    "scheduler": "constant"
+  },
+  "training_settings": {
+    "seed": 42,
+    "milestones": [
+      10000,
+      50000,
+      300000
+    ],
+    "effective_batch": 32,
+    "microbatch_max": 8,
+    "max_padded_microbatch_tokens": 1536,
+    "rank": 8,
+    "alpha": 16,
+    "lora_modules": [
+      "q_proj",
+      "v_proj"
+    ],
+    "lora_dropout": 0.0,
+    "dtype": "bfloat16",
+    "attention": "sdpa"
+  },
+  "runtime_versions": {
+    "torch": "2.14.1+cu130",
+    "transformers": "4.57.1",
+    "peft": "0.17.1",
+    "numpy": "2.4.6"
+  },
+  "sequence_statistics": {
+    "min": 26,
+    "median": 88.0,
+    "p99": 291.0,
+    "max": 2352,
+    "source_and_target_tokens": 29955548,
+    "english_tokens_including_eot": 9670521
+  },
+  "validation_mean_english_token_loss_by_examples_seen": {
+    "0": 3.9534896620675557,
+    "10000": 1.2153047929199605,
+    "50000": 1.0963876771132781,
+    "300000": 0.9503143576758897
+  },
+  "training_timer_includes": [
+    "batch padding",
+    "CPU-to-GPU transfer",
+    "forward and backward passes",
+    "optimizer update"
+  ],
+  "training_timer_excludes": [
+    "environment setup",
+    "validation",
+    "checkpoint writes",
+    "translation and scoring"
+  ],
+  "matched_32_pair_forward_backward_benchmark": [
+    {
+      "microbatch_limit": 1,
+      "seconds": 5.8553178720000005,
+      "examples_per_second": 5.465117470910211,
+      "peak_allocated_GiB": 2.658771514892578
+    },
+    {
+      "microbatch_limit": 8,
+      "seconds": 0.9992489609999211,
+      "examples_per_second": 32.024051311475446,
+      "peak_allocated_GiB": 5.64966344833374
+    },
+    {
+      "microbatch_limit": 8,
+      "seconds": 0.99032764399999,
+      "examples_per_second": 32.312538374421386,
+      "peak_allocated_GiB": 5.64966344833374
+    },
+    {
+      "microbatch_limit": 1,
+      "seconds": 5.833922961000098,
+      "examples_per_second": 5.4851598510848865,
+      "peak_allocated_GiB": 2.658771514892578
+    }
+  ]
+}

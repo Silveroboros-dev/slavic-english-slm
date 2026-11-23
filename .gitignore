@@ -1,0 +1,8 @@
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+slm-corpus-cache/
+pilot-v1/
+nllb-work/
+*.safetensors
+*.pt

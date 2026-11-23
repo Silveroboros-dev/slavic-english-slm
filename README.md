@@ -1,0 +1,55 @@
+# Slavic-to-English translation with small language models
+
+If a worker can start a shift *at the earliest* at 2:30, a 3:00 start works. A translation that drops two words can make a manager turn down the offer. This project asks whether fine-tuning a small model helps an English-speaking recipient understand who should act, when, and under what conditions.
+
+We fine-tuned NLLB-200-distilled-600M and Gemma 3 1B-IT on Polish, Croatian and Russian paired with English. Ukrainian was held out of adapter training to test transfer to a related language. The work began as a capstone for [Google DeepMind’s AI Research Foundations course](https://github.com/google-deepmind/ai-foundations). The research proposal describes the hypothesis, engineering choices, comparison groups, results and remaining tests. [Read on GitHub](docs/research-proposal.md) or [download the PDF](docs/research-proposal.pdf).
+
+## Run the notebooks
+
+Open any notebook in Colab, select a CPU runtime and choose **Runtime → Run all**. The default examples use Python’s standard library and work without model downloads, credentials or a mounted Drive. Each notebook can also run on its own in Jupyter.
+
+| Notebook | What you can check | Colab |
+| --- | --- | --- |
+| [Collect and clean parallel data](notebooks/01_collect_and_clean.ipynb) | Parse Europarl records, preserve meaningful symbols, group by document, and catch text overlap. An optional cell fetches and checks the original archives. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/01_collect_and_clean.ipynb) |
+| [Construct contrast questions](notebooks/02_build_contrast_questions.ipynb) | Change one word in a message, check that the answer flips, and present one version to a reader without showing the answer. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/02_build_contrast_questions.ipynb) |
+| [Compare LoRA experiments](notebooks/03_lora_experiments.ipynb) | Trace a low-rank update and target-token loss on small numerical examples. Compare the recorded results of the NLLB pilot, two matched Gemma runs and the full Gemma run. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/03_lora_experiments.ipynb) |
+| [Evaluate a translation decision](notebooks/evaluate_translation.ipynb) | Calculate observed COMET changes, then try a synthetic scheduling example where a small wording change alters the recipient’s answer. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/evaluate_translation.ipynb) |
+
+## What went into training
+
+| Corpus | Direction | Pairs in the full Gemma run |
+| --- | --- | ---: |
+| [JRC-Acquis v3.0](https://joint-research-centre.ec.europa.eu/language-technology-resources/jrc-acquis_en) | Polish → English | 72,000 |
+| [Europarl v10](https://www.statmt.org/europarl/v10/) | Polish → English | 28,000 |
+| [DGT-TM, OPUS v2021](https://joint-research-centre.ec.europa.eu/language-technology-resources/dgt-translation-memory_en) | Croatian → English | 100,000 |
+| [UN Parallel Corpus v1.0](https://www.un.org/dgacm/en/content/uncorpus) | Russian → English | 100,000 |
+
+The NLLB pilot used document-level splits with 100,000 training pairs, 1,000 validation pairs and 1,000 test pairs per training language. The full Gemma run used the same training quotas after replacing 575 corrupted Croatian records and one malformed Russian table. The acquisition notebook lists the archive URLs and SHA-256 checksums. The [original pilot builder and verifier](pipeline/) read archives obtained from their publishers.
+
+We also designed [36 synthetic everyday scenarios](data/b01_contrasts.jsonl). Each contains a Polish, Croatian or Russian message in two variants, English reference translations, one question and opposite expected answers. The 72 variants were reviewed for their intended reading. In the matched Gemma experiment, they replaced 72 of 384 official pairs in one arm. Both arms ran for 48 updates. A separate set of 72 historical messages was used for evaluation. The 300,000-pair Gemma run used official documents only.
+
+## What changed after training
+
+Gemma completed one epoch on a single NVIDIA L4 in 2 h 11 min 29 s of training time. Rank-8 LoRA updated 745,472 parameters. The [run record](results/gemma_run.json) includes the batching benchmark, precision, optimizer settings, timings and dataset hash.
+
+| Source language | Everyday COMET, base → 300k (18 messages each) | Held-out COMET, base → 300k (32 pairs each) |
+| --- | ---: | ---: |
+| Polish | 0.6743 → 0.6373 | 0.7746 → 0.8383 |
+| Croatian | 0.7483 → 0.7699 | 0.7792 → 0.8653 |
+| Russian | 0.7723 → 0.7452 | 0.8304 → 0.8548 |
+| Ukrainian | 0.7886 → 0.7569 | 0.8280 → 0.8257 |
+
+The last column uses official documents for the three training languages and [FLORES-200](https://huggingface.co/datasets/facebook/flores) for Ukrainian. BLEU, chrF++ and COMET improved on all three official test subsets. Everyday COMET rose only for Croatian, and its paired 95% interval for the change included zero. The [intervals](results/everyday_comet_intervals.csv) use 2,000 paired resamples of 18 messages per language from one training run. The separate 16-case stress set uses questions about the action a reader would take. It has no reference-based scores. Performance on new situations from participants and on phones remains to be measured.
+
+The [full Gemma results](results/metrics.csv) give scores for the base model and the 10k, 50k and 300k checkpoints. For earlier experiments, see the [matched Gemma arms](results/gemma_matched_everyday.csv) and the [NLLB pilot](results/nllb_everyday.csv). These are aggregates over saved translations. The notebooks distinguish measurements from constructed examples.
+
+## Rebuild the original pilot
+
+From the repository root, place the four verified archives in `slm-corpus-cache/` using the filenames in notebook 01. To acquire them with the notebook, set `download_archives` to `("europarl", "jrc", "dgt", "unpc")` in its optional cell. The four downloads total 2.85 GB. The builder also retrieves the DGT document index if it is absent. Use a fresh output directory.
+
+```sh
+python3 pipeline/build_pilot.py --data-dir slm-corpus-cache --cache-dir slm-corpus-cache --output-dir pilot-v1
+python3 pipeline/verify_pilot.py pilot-v1
+```
+
+This rebuilds the NLLB pilot v1. The [NLLB training guide and original GPU trainer](training/) explain how to verify the frozen split and run the LoRA experiment. Gemma’s corrected v2 training file is identified separately in the run record. The upstream corpora and base models are distributed by their respective providers under their own terms. [NLLB model card](https://huggingface.co/facebook/nllb-200-distilled-600M) · [Gemma 3 model card](https://huggingface.co/google/gemma-3-1b-it)
