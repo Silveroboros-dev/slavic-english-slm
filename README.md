@@ -1,8 +1,20 @@
 # Slavic-to-English translation with small language models
 
-If a worker can start a shift *at the earliest* at 2:30, a 3:00 start works. A translation that drops two words can make a manager turn down the offer. This project asks whether fine-tuning a small model helps an English-speaking recipient understand who should act, when, and under what conditions.
+## Executive summary
 
-We fine-tuned NLLB-200-distilled-600M and Gemma 3 1B-IT on Polish, Croatian and Russian paired with English. Ukrainian was held out of adapter training to test transfer to a related language. The work began as a capstone for [Google DeepMind’s AI Research Foundations course](https://github.com/google-deepmind/ai-foundations). The research proposal describes the hypothesis, engineering choices, comparison groups, results and remaining tests. [Read on GitHub](docs/research-proposal.md) or [download the PDF](docs/research-proposal.pdf).
+A parent writing in Polish asked whether their daughter could answer a question after class. In one of our tests, the English translation asked the teacher to answer. For people who have moved abroad, a fluent sentence can change what happens next. Our goal is a translator that can run offline on a phone and help an English-speaking reader understand who should act, when, and under what conditions.
+
+We used LoRA to fine-tune NLLB-200-distilled-600M and Gemma 3 1B-IT on 300,000 official translation pairs each. Polish, Croatian and Russian represent the West, South and East Slavic branches. All three use case endings to mark who did what to whom. We held Ukrainian out of fine-tuning to test whether learning from related languages helps when fewer translated examples are available.
+
+Both models improved on official texts. On 72 everyday messages, Gemma’s average COMET score fell for Polish, Russian and Ukrainian. It rose for Croatian, though 18 messages leave the size and direction of that change uncertain. The next test asks independent readers what they would do after reading a translation and asks the writer whether that matches their intent. Phone performance also awaits testing. [Results by language](#what-changed-after-training)
+
+## Historical precedent
+
+In 1990, Brown and colleagues trained a statistical translation model on the Canadian Hansards, the English and French records of parliamentary debates. The model associated the English *Hear, hear!* with the French *Bravo!* because members used both expressions to signal approval in the chamber. [Brown et al., *A Statistical Approach to Machine Translation*](https://aclanthology.org/J90-2002/)
+
+That precedent motivated our choice of EU and UN records, where the same proceedings and documents are available in several languages. Whether those translations help a parent write to a teacher or a worker agree on a shift is a separate question. We evaluate everyday messages for that reason.
+
+The project began as a capstone for Google DeepMind’s AI Research Foundations course. [Course materials](https://github.com/google-deepmind/ai-foundations) · [Full research proposal](docs/research-proposal.md) · [PDF](docs/research-proposal.pdf)
 
 ## Run the notebooks
 
