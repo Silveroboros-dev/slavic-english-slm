@@ -98,9 +98,11 @@ On the same 64 normalized messages, both INT8 models ran on the same two logical
 | NLLB + R4 digits | 22/24 | 8/8 | 2.59 s | 3.32 s | 1.47 | 665.7 |
 | Gemma 3 1B-IT | 19/24 | 7/8 | 3.96 s | 4.74 s | 2.55 | 1,047.9 |
 
+**[Open the CPU · INT8 dashboard](https://silveroboros-dev.github.io/slavic-english-slm/#cpu-int8)**
+
 R4 kept its overall pair score. It corrected the Polish sourdough instruction to **4:30 a.m.** but moved the Croatian flour delivery from **4:30 a.m. to 4:30 p.m.** Gemma gained one Polish pair over its earlier 18/24. The inference engine also changed between runs, so the comparison cannot isolate the effect of quantization.
 
-Both models used CTranslate2 4.9.1 (`int8_float32`) with greedy decoding and batch size one. After warm-up, each request was timed once from tokenization through the English output. Peak RAM covers the full process. Package size includes weights and tokenizer in decimal MB. Phone performance still needs a device test. [CPU dashboard](https://silveroboros-dev.github.io/slavic-english-slm/#cpu-int8) · [Per-message timings and scoring record](results/norm64_cpu_int8.json)
+Both models used CTranslate2 4.9.1 (`int8_float32`) with greedy decoding and batch size one. After warm-up, each request was timed once from tokenization through the English output. Peak RAM covers the full process. Package size includes weights and tokenizer in decimal MB. Phone performance still needs a device test. [View raw per-message timings and scoring data (JSON)](results/norm64_cpu_int8.json)
 
 ## Compute, tokens and workflow
 
