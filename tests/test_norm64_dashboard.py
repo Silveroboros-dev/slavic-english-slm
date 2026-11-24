@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+import re
 import tempfile
 import unittest
 
@@ -76,3 +77,12 @@ class DashboardTests(unittest.TestCase):
     def test_shipped_dashboard_uses_current_records(self):
         dashboard = (RESULTS.parent / "docs" / "index.html").read_text(encoding="utf-8")
         self.assertEqual(embed(dashboard, self.data), dashboard)
+
+    def test_readme_opens_hosted_dashboard(self):
+        readme = (RESULTS.parent / "README.md").read_text(encoding="utf-8")
+        live_url = "https://silveroboros-dev.github.io/slavic-english-slm/"
+        preview = r"\[!\[[^\]]*\]\(docs/norm64-preview\.png\)\]\(([^)]+)\)"
+        link = r"\[Interactive dashboard\]\(([^)]+)\)"
+        for pattern in (preview, link):
+            with self.subTest(pattern=pattern):
+                self.assertEqual(re.findall(pattern, readme), [live_url])

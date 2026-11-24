@@ -4,9 +4,9 @@ This project investigates compact models for offline translation from **Polish, 
 
 After four rounds of LoRA fine-tuning on NLLB-200-distilled-600M (R1–R4), we tested a **neuro-symbolic approach**. Norm64 gives each scenario two messages with different start times. With colloquial wording, the final **R4 digits** adapter preserved both times in **none of the 24** Polish, Croatian and Russian scenarios. When a rule first converted each half-hour expression to 24-hour digits, the same adapter passed **22 of 24**. We compared four models on those inputs and used a separate numeric check to flag time discrepancies in their English translations.
 
-[![Four models on normalized Polish, Croatian and Russian messages. R4 preserved both times in 22 of 24 scenarios, Gemma in 18, base NLLB in 8 and OPUS-MT in 1.](docs/norm64-preview.png)](docs/index.html)
+[![Four models on normalized Polish, Croatian and Russian messages. R4 preserved both times in 22 of 24 scenarios, Gemma in 18, base NLLB in 8 and OPUS-MT in 1.](docs/norm64-preview.png)](https://silveroboros-dev.github.io/slavic-english-slm/)
 
-**[Interactive dashboard](docs/index.html)** · On GitHub, choose **Download raw file** and open the saved HTML in your browser. In a local checkout, open `docs/index.html` directly. Choose a language, compare the four models or read both versions of a scenario. [Key research findings](#key-research-findings) · [Benchmark summary](#benchmark-summary) · [Repository structure](#repository-structure)
+**[Interactive dashboard](https://silveroboros-dev.github.io/slavic-english-slm/)** · Choose a language, compare the four models or read both versions of a scenario. For offline use, download the [standalone HTML file](https://github.com/Silveroboros-dev/slavic-english-slm/raw/refs/heads/main/docs/index.html) and open it in a browser. [Key research findings](#key-research-findings) · [Benchmark summary](#benchmark-summary) · [Repository structure](#repository-structure)
 
 ## Executive summary
 
