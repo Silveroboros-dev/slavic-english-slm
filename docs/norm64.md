@@ -60,3 +60,14 @@ diff -u results/norm64_text_metrics.csv /tmp/norm64_text_metrics.csv
 ```
 
 The case file includes both source forms, a reference, six saved outputs per message, the blinded readings and the expected time. The run manifest identifies the models, adapter, decoding settings and hardware. Regenerating R4 translations requires the matching adapter weights separately. Gemma ran on a Colab CPU and the MT models ran on Colab GPUs, so these runs do not establish a latency ranking or phone performance. [Case file](../results/norm64_cases.jsonl) · [Run manifest](../results/norm64_run.json) · [Source normalizer](../pipeline/clock_normalize.py) · [Numeric checker](../pipeline/clock_check.py)
+
+### Rebuild the offline dashboard
+
+Open `docs/index.html` in a browser. The benchmark counts both variants of a pair within the selected language group. The case explorer uses the case ID, A/B variant and model to retrieve the exact archived translation, blinded clock reading and numeric check. The metric table distinguishes original English notation from the formatting diagnostic. COMET is available for the two original-notation R4 runs.
+
+To refresh the embedded snapshot after a data change, run the builder and verify it against the source files. Both commands work offline.
+
+```sh
+python3 pipeline/build_norm64_dashboard.py
+python3 pipeline/build_norm64_dashboard.py --check
+```
