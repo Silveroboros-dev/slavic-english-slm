@@ -93,7 +93,7 @@ footer{margin:18px 0 0;font-size:.87rem;color:var(--muted)}
 <header><div class="wrap">
 <div class="mast"><span class="brand"><span class="mark" aria-hidden="true"></span>NORM64</span><span>Slavic → English</span></div>
 <h1>From LoRA Fine-Tuning to a Neuro-Symbolic Clock Pipeline</h1>
-<p>Can a small translator preserve what the writer means? Our goal is offline translation on a phone for people who have moved abroad. We wrote pairs of everyday messages to test whether changing a condition changes what the English-speaking reader would do.</p>
+<p>Can a small translator preserve what the writer means? I started this project for people who have moved abroad and want to translate messages offline on a phone. I used pairs of everyday messages to test whether an English-speaking reader could tell when to act.</p>
 </div></header>
 <div class="nav-shell"><nav class="wrap" aria-label="Research views">
 <button type="button" data-view="benchmark" aria-pressed="true">Benchmark</button>
@@ -118,7 +118,7 @@ footer{margin:18px 0 0;font-size:.87rem;color:var(--muted)}
 <div class="chart-grid" aria-hidden="true"><span style="--tick:0%"><i>0%</i></span><span style="--tick:25%"><i>25%</i></span><span style="--tick:50%"><i>50%</i></span><span style="--tick:75%"><i>75%</i></span><span style="--tick:100%"><i>100%</i></span></div>
 <div class="chart-columns" id="bars" role="list"></div></div>
 <div class="study-notes">
-<section><h3>Why train NLLB?</h3><p>One 600M-parameter translation model covers all four source languages with a shared English decoder. We froze its weights and trained a LoRA adapter for it. The resulting system is <strong>NLLB + R4 digits</strong>.</p></section>
+<section><h3>Why train NLLB?</h3><p>One 600M-parameter translation model covers all four source languages with a shared English decoder. I kept its base weights frozen during LoRA fine-tuning. The resulting system is <strong>NLLB + R4 digits</strong>.</p></section>
 <section><h3>What did the adapter add?</h3><p id="adapter-result"></p></section>
 </div>
 <p class="scope" id="scope"></p>
@@ -131,7 +131,7 @@ footer{margin:18px 0 0;font-size:.87rem;color:var(--muted)}
 <article class="panel"><div class="panel-head"><h2>Two systems, the same Colab CPU</h2><span class="tag">24 Nov 2026</span></div>
 <p class="subhead">A separate fixed run on an Intel Xeon with two logical CPUs. CTranslate2 4.9.1 · int8_float32 · greedy decoding · batch size 1.</p>
 <p class="scope">A scenario passes only when both A and B preserve the exact clock time. Primary results cover Polish, Croatian and Russian. Ukrainian transfer is reported separately.</p>
-<div id="cpu-results" class="grid cpu-results"></div><p class="note" id="cpu-status" hidden>CPU evidence has not been embedded in this copy.</p></article>
+<div id="cpu-results" class="grid cpu-results"></div><p class="note" id="cpu-status" hidden></p></article>
 <article class="panel"><h2>What these measurements cover</h2><div class="study-notes">
 <section><h3>Latency, memory and package</h3><p>Median and p95 cover all 64 single-message timings, from tokenization through decoding. Memory is peak process RSS in GiB. Package size uses decimal MB and includes the tokenizer.</p></section>
 <section><h3>Transfer and limits</h3><p>Ukrainian uses an explicit normalization rule, with zero Ukrainian fine-tuning pairs. Phone performance remains unmeasured. Exact clock preservation does not establish overall translation quality.</p></section></div>
@@ -221,7 +221,7 @@ function renderBenchmark(rows, arms) {
     ?"A and B differ by one hour. A scenario passes when both English translations give their respective times unambiguously. All four systems received the same messages with the times in digits."
     :"Each message passes if its English translation gives the correct, unambiguous time. All four systems received the same times in digits.";
   byId("axis-title").textContent=pairMode?"A/B scenarios with both times correct (%)":"Individual messages with the exact time correct (%)";
-  const roles={r4_normalized:"Our LoRA adapter",gemma_1b:"Instruction-tuned",nllb_base:"Unadapted baseline",opus:"Compact MT baseline"};
+  const roles={r4_normalized:"R4 LoRA adapter",gemma_1b:"Instruction-tuned",nllb_base:"Unadapted baseline",opus:"Compact MT baseline"};
   byId("bars").replaceChildren(...systems.map(arm=>{
     const pass=arms[arm][numerator],total=arms[arm][den],rate=100*pass/total;
     const column=create("div",undefined,"chart-column");
@@ -246,7 +246,7 @@ function renderBenchmark(rows, arms) {
     " to "+trained+"/"+total+" "+unit+" correct with R4 (+"+gain+" percentage points). The larger Gemma 3 1B-IT passed "+gemma+"/"+total+".";
   byId("scope").textContent=state.group==="uk"
     ?"Ukrainian had zero fine-tuning pairs. This test supplied a Ukrainian source-normalization rule."
-    :"Blinded agents read the translations for exact time. BLEU measures overlap in wording and appears under Text metrics. We developed the clock rules on this panel.";
+    :"Blinded agents read the translations for exact time. BLEU measures overlap in wording and appears under Text metrics. I used this panel to develop the clock rules.";
   const [id,title]=featureCases[state.group],sample=unique(rows.filter(r=>r.id===id),id);
   byId("feature-title").textContent=title;byId("feature-id").textContent=id;
   const source=create("p",undefined,"field"),sourceLabel=create("strong","English reference · ");
@@ -281,7 +281,7 @@ function renderMetrics(arms) {
   byId("scores").replaceChildren(table(["System","Source clock","Messages","BLEU","chrF++","Mean COMET"],rows,[1]));
   byId("scores").querySelector("table").setAttribute("aria-describedby","notation-note");
   byId("notation-note").textContent=notation==="original"
-    ?"¹ We scored COMET only to compare R4 before and after source-time normalization, using the same original source and English reference for both translations."
+    ?"¹ The COMET comparison uses the same original source and English reference to score R4 before and after source-time normalization."
     :"¹ This formatting check used BLEU and chrF++ only. It rewrites a single explicit English AM/PM time as HH:MM while preserving the model’s chosen hour and the reference.";
 }
 function renderExplorer(rows) {
@@ -302,7 +302,12 @@ function renderExplorer(rows) {
 }
 function renderCpuInt8() {
   const evidence=data.cpu_int8,target=byId("cpu-results");target.replaceChildren();
-  byId("cpu-status").hidden=Boolean(evidence);if(!evidence)return;
+  const status=byId("cpu-status");
+  status.hidden=Boolean(evidence);
+  if(!evidence){
+    status.textContent="This copy is missing the CPU benchmark data.";
+    return;
+  }
   const format=(v,scale,digits)=>Number.isFinite(v)?(v/scale).toLocaleString("en",{minimumFractionDigits:digits,maximumFractionDigits:digits}):"—";
   for(const [id,title] of [["nllb_r4","NLLB + R4 digits"],["gemma_1b","Gemma 3 1B-IT"]]){
     const result=evidence.systems?.[id];assert(result,"Missing CPU evidence for "+id+".");
