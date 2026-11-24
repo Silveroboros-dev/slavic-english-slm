@@ -81,7 +81,7 @@ class DashboardTests(unittest.TestCase):
     def test_readme_opens_hosted_dashboard(self):
         readme = (RESULTS.parent / "README.md").read_text(encoding="utf-8")
         live_url = "https://silveroboros-dev.github.io/slavic-english-slm/"
-        preview = r"\[!\[[^\]]*\]\(docs/norm64-preview\.png\)\]\(([^)]+)\)"
+        preview = r"\[!\[[^\]]*\]\(docs/clock-pipeline-preview\.png\)\]\(([^)]+)\)"
         link = r"\[Interactive dashboard\]\(([^)]+)\)"
         for pattern in (preview, link):
             with self.subTest(pattern=pattern):
