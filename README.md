@@ -1,30 +1,22 @@
 # Slavic-to-English translation with small language models
 
-Can a compact translator preserve a writer’s intent well enough for an English-speaking reader to take the right action? Our goal is offline translation on a phone from **Polish, Croatian and Russian into English**. We held **Ukrainian** out of fine-tuning to test transfer. We wrote paired stress tests in which a small edit changes who should act, when, or under what condition. Norm64 examines one of those decisions. If a bakery expects a delivery *u pola pet ujutro* in Croatian, staff need to be ready at **4:30 a.m.**
+<a id="executive-summary"></a>
 
-We chose **NLLB-200-distilled-600M** because one compact translation model covers all four languages. Over four rounds of LoRA fine-tuning we trained an adapter while keeping the base weights frozen. On identical inputs with time written in digits, **base NLLB passed 8/24** Polish, Croatian and Russian scenarios and **our NLLB + R4 digits passed 22/24**. A scenario passes only if both English translations preserve their different start times. The larger **Gemma 3 1B-IT passed 18/24** and the compact **OPUS-MT passed 1/24**. With the original colloquial time expressions, R4 passed 0/24. The graph shows how often a reader could recover the exact time. We report BLEU separately as a measure of wording overlap.
+In a Polish test message, a parent asked whether her daughter could answer a question after class. The English translation asked the teacher to answer. I started this project for people who have moved abroad and need to write messages like this in English. Can a compact translator preserve who should act, when and under what conditions? The goal is offline use on a phone. The training runs took place in Colab.
+
+I chose **NLLB-200-distilled-600M** because one small translation model covers **Polish, Croatian, Russian and Ukrainian**. The first three represent the West, South and East Slavic branches and share features such as case endings that help identify who did what. I held Ukrainian out of fine-tuning to test transfer. After training on official documents, I used paired everyday messages to test whether a small wording change survived translation. In one Croatian case, a bakery expects flour *u pola pet ujutro*. Staff need to be ready at **4:30 a.m.**
+
+After four rounds of LoRA experiments, I tested the final **NLLB + R4 digits** adapter on 24 clock scenarios in the three training languages. A scenario passed only when blinded agents could recover the exact time in **both** English translations. R4 passed **0/24** with colloquial times. With the same weights and a rule that rewrote each source time in 24-hour digits, it passed **22/24**. On the same normalized inputs, unadapted NLLB passed **8/24**, the larger Gemma 3 1B-IT **18/24**, and OPUS-MT **1/24**. The rules were developed on this panel. [Method and examples](docs/norm64.md)
 
 [![From LoRA Fine-Tuning to a Neuro-Symbolic Clock Pipeline. Percentage of scenarios with both times correct: our NLLB + R4 digits 91.7%, Gemma 75.0%, base NLLB 33.3% and OPUS-MT 4.2%.](docs/norm64-accuracy-columns.png)](https://silveroboros-dev.github.io/slavic-english-slm/)
 
-**[Interactive dashboard](https://silveroboros-dev.github.io/slavic-english-slm/)** · Choose a language, compare the four models or read both versions of a scenario. For offline use, download the [standalone HTML file](https://github.com/Silveroboros-dev/slavic-english-slm/raw/refs/heads/main/docs/index.html) and open it in a browser. [Key research findings](#key-research-findings) · [Benchmark summary](#benchmark-summary) · [Repository structure](#repository-structure)
+**[Interactive dashboard](https://silveroboros-dev.github.io/slavic-english-slm/)** · Choose a language, compare the four models or read both versions of a scenario. For offline use, download the [standalone HTML file](https://github.com/Silveroboros-dev/slavic-english-slm/raw/refs/heads/main/docs/index.html) and open it in a browser. [Key research findings](#key-research-findings) · [Benchmark summary](#benchmark-summary) · [Compute, tokens and workflow](#compute-tokens-and-workflow) · [Repository structure](#repository-structure)
 
-## Executive summary
+## Key research findings
 
-A parent writing in Polish asked whether their daughter could answer a question after class. In one of our tests, the English translation asked the teacher to answer. For people who have moved abroad, a fluent sentence can change what happens next. Our goal is a translator that can run offline on a phone and help an English-speaking reader understand who should act, when, and under what conditions.
-
-We used LoRA to fine-tune NLLB-200-distilled-600M and Gemma 3 1B-IT on 300,000 official translation pairs each. Polish, Croatian and Russian represent the West, South and East Slavic branches. All three use case endings to mark who did what to whom. We held Ukrainian out of fine-tuning to test whether learning from related languages helps when fewer translated examples are available.
-
-Both models improved on official texts. On 72 everyday messages, Gemma’s average COMET score fell for Polish, Russian and Ukrainian. It rose for Croatian, though 18 messages leave the size and direction of that change uncertain. The next test asks independent readers what they would do after reading a translation and asks the writer whether that matches their intent. Phone performance also awaits testing. [Results by language](#what-changed-after-training)
-
-One of the remaining clock errors moved filming nocturnal animals from **00:30** to **1:30 p.m.**, thirteen hours late. Gemma kept **00:30** on that Croatian message. The dashboard lets you read both outputs and decide what a camera operator would do. [Clock experiment and offline replay](#can-a-recipient-tell-the-exact-time)
-
-## Historical precedent
-
-In 1990, Brown and colleagues trained a statistical translation model on the Canadian Hansards, the English and French records of parliamentary debates. The model associated the English *Hear, hear!* with the French *Bravo!* because members used both expressions to signal approval in the chamber. [Brown et al., *A Statistical Approach to Machine Translation*](https://aclanthology.org/J90-2002/)
-
-That precedent motivated our choice of EU and UN records, where the same proceedings and documents are available in several languages. Whether those translations help a parent write to a teacher or a worker agree on a shift is a separate question. We evaluate everyday messages for that reason.
-
-The project began as a capstone for Google DeepMind’s AI Research Foundations course. [Course materials](https://github.com/google-deepmind/ai-foundations) · [Full research proposal](docs/research-proposal.md) · [PDF](docs/research-proposal.pdf)
+- **An average score can hide a change in meaning.** Across the 48 Polish, Croatian and Russian clock messages, mean COMET moved from 0.79107 to 0.78974 as R4 went from 0/24 to 22/24 complete pairs. Both outputs were scored against the same original source and English reference. [Metric results](results/norm64_text_metrics.csv)
+- **The checker caught a thirteen-hour error.** R4 moved filming nocturnal animals from 00:30 to 1:30 p.m. Gemma gave the correct 00:30. Across all 64 normalized R4 outputs, a separate numeric check flagged both wrong times and accepted all 62 correct ones. It also accepted Gemma’s “around 9:30 PM” for a subtitle test scheduled at exactly 21:30. [Checker audit and translations](docs/norm64.md#what-the-numeric-check-caught)
+- **Training gains depended on the domain.** After 300,000 official pairs, Gemma’s Croatian official-test COMET rose from 0.7792 to 0.8653. On 18 everyday Croatian messages, the confidence interval for the smaller gain included zero. Everyday COMET fell for Polish, Russian and Ukrainian. [Results by language](#what-changed-after-training)
 
 ## Run the notebooks
 
@@ -63,15 +55,9 @@ Gemma completed one epoch on a single NVIDIA L4 in 2 h 11 min 29 s of training t
 
 The last column uses official documents for the three training languages. All three improved, with the largest gains on the Croatian official test across all three metrics (+17.86 BLEU, +13.24 chrF++ and +0.0861 COMET). For Ukrainian, we scored 32 general-domain sentences from the FLORES-200 benchmark. BLEU on those same sentences rose from 27.30 at baseline to 28.22 after 50,000 training pairs, then finished at 26.80 after 300,000. Final chrF++ (54.31 → 51.60) and COMET (0.8280 → 0.8257) also fell below baseline. [FLORES-200 dataset](https://huggingface.co/datasets/facebook/flores) · [Scores at each checkpoint](results/metrics.csv)
 
-Everyday COMET rose only for Croatian, and its paired 95% interval for the change included zero. The [intervals](results/everyday_comet_intervals.csv) use 2,000 paired resamples of 18 messages per language from one training run. The separate 16-case stress set uses questions about the action a reader would take. It has no reference-based scores. Performance on new situations from participants and on phones remains to be measured.
+Everyday COMET rose only for Croatian, and its paired 95% interval for the change included zero. The [intervals](results/everyday_comet_intervals.csv) use 2,000 paired resamples of 18 messages per language from one training run. The separate 16-case stress set uses questions about the action a reader would take. It has no reference-based scores. The next test is to ask independent readers what they would do in new situations and compare their answers with the writers’ intentions. Phone performance also awaits measurement.
 
 The [full Gemma results](results/metrics.csv) give scores for the base model and the 10k, 50k and 300k checkpoints. For earlier experiments, see the [matched Gemma arms](results/gemma_matched_everyday.csv) and the [NLLB pilot](results/nllb_everyday.csv). These are aggregates over saved translations. The notebooks distinguish measurements from constructed examples.
-
-## Key research findings
-
-- **Training domain mattered.** After fine-tuning Gemma on official documents, Croatian official-test COMET rose from 0.7792 to 0.8653. On everyday Croatian, the smaller gain was within the uncertainty of an 18-message sample. [Everyday and held-out results](#what-changed-after-training)
-- **A metric can miss a decision that matters to the reader.** Across 48 Polish, Croatian and Russian messages, writing source times in digits lifted R4 from zero to 22 complete clock scenarios while mean COMET moved from 0.7911 to 0.7897. [Raw and notation-adjusted scores](results/norm64_text_metrics.csv)
-- **A numeric match can still change a commitment.** The checker flagged both wrong times in R4's normalized outputs. It also accepted Gemma's “around 9:30 PM” for a subtitle test scheduled at exactly 21:30. [Checker audit and examples](docs/norm64.md#what-the-numeric-check-caught)
 
 ## Can a recipient tell the exact time?
 
@@ -103,6 +89,19 @@ python3 -m unittest discover -s tests -v
 
 [Method and observed failures](docs/norm64.md) · [64 cases, English translations and blinded readings](results/norm64_cases.jsonl) · [Model and run identities](results/norm64_run.json)
 
+## Compute, tokens and workflow
+
+I framed the research question, chose the comparisons and reviewed the failures. Coding agents helped implement the experiments, run checks and prepare the notebooks. Between 20 and 24 November 2026, the project used at least **24 working notebooks** for data preparation, training and evaluation. The count excludes six reader copies and a preliminary Gemma launcher. [Four public notebooks](notebooks/)
+
+| Resource | Recorded use | How it was counted |
+| --- | --- | --- |
+| Fine-tuning | 9 runs · 20,581 optimizer updates · 656,256 training pairs presented | Six NLLB runs and three Gemma runs. Each repeat of a training pair counts as another presentation. |
+| Training tokens | 56.01M source and target tokens, or 56.42M including the extra contrastive passes | Unpadded tokens across all six NLLB runs and the full Gemma run. The two short Gemma pilots and evaluation decoding are outside this count. |
+| Google Colab | About 6 h 52 min in GPU runtimes and 53 min in CPU runtimes | Reconstructed from recorded execution intervals. The GPU figure includes about 5 h 25 min in training and associated operations. The first NLLB run was timed from checkpoints. |
+| Codex | 1,330.47M tokens, including 1,311.24M cached input tokens (98.55% of the total) | Up to the start of the 24 November resource audit, the main project chat and its coding agents used 16,496,499 uncached input tokens and generated 2,736,868 output tokens (19.23M combined). External reviewers are outside this count. |
+
+For one directly timed run, **Gemma 3 1B-IT trained on 300,000 pairs in 2 h 11 min 29 s on a single NVIDIA L4**. That timer covered batch preparation, transfer and optimization, including the forward and backward passes. Project records do not establish idle rental time or billed Colab Compute Units. [Gemma training record](results/gemma_run.json)
+
 ## Rebuild the original pilot
 
 From the repository root, place the four verified archives in `slm-corpus-cache/` using the filenames in notebook 01. To acquire them with the notebook, set `download_archives` to `("europarl", "jrc", "dgt", "unpc")` in its optional cell. The four downloads total 2.85 GB. The builder also retrieves the DGT document index if it is absent. Use a fresh output directory.
@@ -113,6 +112,14 @@ python3 pipeline/verify_pilot.py pilot-v1
 ```
 
 This rebuilds the NLLB pilot v1. The [NLLB training guide and original GPU trainer](training/) explain how to verify the frozen split and run the LoRA experiment. Gemma’s corrected v2 training file is identified separately in the run record. The upstream corpora and base models are distributed by their respective providers under their own terms. [NLLB model card](https://huggingface.co/facebook/nllb-200-distilled-600M) · [Gemma 3 model card](https://huggingface.co/google/gemma-3-1b-it)
+
+## Historical precedent
+
+In 1990, Brown and colleagues trained a statistical translation model on the Canadian Hansards, the English and French records of parliamentary debates. The model associated the English *Hear, hear!* with the French *Bravo!* because members used both expressions to signal approval in the chamber. [Brown et al., *A Statistical Approach to Machine Translation*](https://aclanthology.org/J90-2002/)
+
+That precedent motivated my choice of EU and UN records, where the same proceedings and documents are available in several languages. Whether those translations help a parent write to a teacher or a worker agree on a shift is a separate question. That is why the project also tests everyday messages.
+
+The project began as a capstone for Google DeepMind’s AI Research Foundations course. [Course materials](https://github.com/google-deepmind/ai-foundations) · [Full research proposal](docs/research-proposal.md) · [PDF](docs/research-proposal.pdf)
 
 ## Repository structure
 
