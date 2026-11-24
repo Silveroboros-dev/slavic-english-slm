@@ -1,5 +1,13 @@
 # Slavic-to-English translation with small language models
 
+This project investigates compact models for offline translation from **Polish, Croatian and Russian into English**. We held **Ukrainian** out of fine-tuning to test transfer. Our focus is everyday messages where timing matters. If a bakery expects a delivery *u pola pet ujutro* in Croatian, its English-speaking staff need to know that means **4:30 a.m.**
+
+After four rounds of LoRA fine-tuning on NLLB-200-distilled-600M (R1–R4), we tested a **neuro-symbolic approach**. Norm64 gives each scenario two messages with different start times. With colloquial wording, the final **R4 digits** adapter preserved both times in **none of the 24** Polish, Croatian and Russian scenarios. When a rule first converted each half-hour expression to 24-hour digits, the same adapter passed **22 of 24**. We compared four models on those inputs and used a separate numeric check to flag time discrepancies in their English translations.
+
+[![Four models on normalized Polish, Croatian and Russian messages. R4 preserved both times in 22 of 24 scenarios, Gemma in 18, base NLLB in 8 and OPUS-MT in 1.](docs/norm64-preview.png)](docs/index.html)
+
+**[Interactive dashboard](docs/index.html)** · On GitHub, choose **Download raw file** and open the saved HTML in your browser. In a local checkout, open `docs/index.html` directly. Choose a language, compare the four models or read both versions of a scenario. [Key research findings](#key-research-findings) · [Benchmark summary](#benchmark-summary) · [Repository structure](#repository-structure)
+
 ## Executive summary
 
 A parent writing in Polish asked whether their daughter could answer a question after class. In one of our tests, the English translation asked the teacher to answer. For people who have moved abroad, a fluent sentence can change what happens next. Our goal is a translator that can run offline on a phone and help an English-speaking reader understand who should act, when, and under what conditions.
@@ -7,6 +15,8 @@ A parent writing in Polish asked whether their daughter could answer a question 
 We used LoRA to fine-tune NLLB-200-distilled-600M and Gemma 3 1B-IT on 300,000 official translation pairs each. Polish, Croatian and Russian represent the West, South and East Slavic branches. All three use case endings to mark who did what to whom. We held Ukrainian out of fine-tuning to test whether learning from related languages helps when fewer translated examples are available.
 
 Both models improved on official texts. On 72 everyday messages, Gemma’s average COMET score fell for Polish, Russian and Ukrainian. It rose for Croatian, though 18 messages leave the size and direction of that change uncertain. The next test asks independent readers what they would do after reading a translation and asks the writer whether that matches their intent. Phone performance also awaits testing. [Results by language](#what-changed-after-training)
+
+One of the remaining clock errors moved filming nocturnal animals from **00:30** to **1:30 p.m.**, thirteen hours late. Gemma kept **00:30** on that Croatian message. The dashboard lets you read both outputs and decide what a camera operator would do. [Clock experiment and offline replay](#can-a-recipient-tell-the-exact-time)
 
 ## Historical precedent
 
@@ -57,6 +67,42 @@ Everyday COMET rose only for Croatian, and its paired 95% interval for the chang
 
 The [full Gemma results](results/metrics.csv) give scores for the base model and the 10k, 50k and 300k checkpoints. For earlier experiments, see the [matched Gemma arms](results/gemma_matched_everyday.csv) and the [NLLB pilot](results/nllb_everyday.csv). These are aggregates over saved translations. The notebooks distinguish measurements from constructed examples.
 
+## Key research findings
+
+- **Training domain mattered.** After fine-tuning Gemma on official documents, Croatian official-test COMET rose from 0.7792 to 0.8653. On everyday Croatian, the smaller gain was within the uncertainty of an 18-message sample. [Everyday and held-out results](#what-changed-after-training)
+- **A metric can miss a decision that matters to the reader.** Across 48 Polish, Croatian and Russian messages, writing source times in digits lifted R4 from zero to 22 complete clock scenarios while mean COMET moved from 0.7911 to 0.7897. [Raw and notation-adjusted scores](results/norm64_text_metrics.csv)
+- **A numeric match can still change a commitment.** The checker flagged both wrong times in R4's normalized outputs. It also accepted Gemma's “around 9:30 PM” for a subtitle test scheduled at exactly 21:30. [Checker audit and examples](docs/norm64.md#what-the-numeric-check-caught)
+
+## Can a recipient tell the exact time?
+
+Each of 32 authored scenarios has two messages about the same event with different start times. A scenario passes when both English translations preserve their respective times unambiguously. We asked two questions.
+
+1. **What does writing the time in digits add?** With colloquial half-hour expressions in the written messages, both base NLLB and NLLB with the R4 digits adapter passed **0/24** Polish, Croatian and Russian scenarios. After converting the time and its daypart to 24-hour digits, base NLLB passed **8/24** and R4 passed **22/24**. On the separate Ukrainian set, the corresponding changes were **0/8 to 4/8** and **0/8 to 8/8**. We kept each model's weights fixed between the two input formats.
+2. **What does the model add once the time is explicit?** All four systems received the same 64 normalized messages and used greedy decoding. The table counts scenarios in which an English reader could recover the exact time from both A and B, using frozen, blinded agent readings.
+
+### Benchmark summary
+
+Each entry counts complete A/B scenarios after source normalization. Each language contributes eight scenarios.
+
+| Source language | NLLB base | NLLB + R4 digits | OPUS-MT | Gemma 3 1B-IT |
+| --- | ---: | ---: | ---: | ---: |
+| Polish | 2/8 | 7/8 | 0/8 | 5/8 |
+| Croatian | 3/8 | 7/8 | 1/8 | 6/8 |
+| Russian | 3/8 | 8/8 | 0/8 | 7/8 |
+| **Three training languages** | **8/24** | **22/24** | **1/24** | **18/24** |
+| Ukrainian, separate | 4/8 | 8/8 | 0/8 | 7/8 |
+
+Ukrainian contributed zero fine-tuning pairs. We supplied a Ukrainian normalization rule for this test. All four rules were developed for the constructions on this previously examined panel. On one Polish pair, R4 preserved both times but translated the milk tanker's unloading hose as a “snake”.
+
+From the repository root, replay the counts and the numeric checker with Python’s standard library.
+
+```sh
+python3 pipeline/score_norm64.py
+python3 -m unittest discover -s tests -v
+```
+
+[Method and observed failures](docs/norm64.md) · [64 cases, English translations and blinded readings](results/norm64_cases.jsonl) · [Model and run identities](results/norm64_run.json)
+
 ## Rebuild the original pilot
 
 From the repository root, place the four verified archives in `slm-corpus-cache/` using the filenames in notebook 01. To acquire them with the notebook, set `download_archives` to `("europarl", "jrc", "dgt", "unpc")` in its optional cell. The four downloads total 2.85 GB. The builder also retrieves the DGT document index if it is absent. Use a fresh output directory.
@@ -67,3 +113,13 @@ python3 pipeline/verify_pilot.py pilot-v1
 ```
 
 This rebuilds the NLLB pilot v1. The [NLLB training guide and original GPU trainer](training/) explain how to verify the frozen split and run the LoRA experiment. Gemma’s corrected v2 training file is identified separately in the run record. The upstream corpora and base models are distributed by their respective providers under their own terms. [NLLB model card](https://huggingface.co/facebook/nllb-200-distilled-600M) · [Gemma 3 model card](https://huggingface.co/google/gemma-3-1b-it)
+
+## Repository structure
+
+| To inspect or reproduce | Start here |
+| --- | --- |
+| Project proposal and clock experiment | [Research proposal](docs/research-proposal.md) · [Norm64 methods and limitations](docs/norm64.md) |
+| Data preparation and reviewed A/B examples | [Pilot builder](pipeline/build_pilot.py) · [Split verifier](pipeline/verify_pilot.py) · [B01 contrasts](data/b01_contrasts.jsonl) |
+| Colab notebooks and LoRA training | [Four notebooks](#run-the-notebooks) · [NLLB training guide](training/README.md) |
+| Recorded translations and metrics | [Norm64 cases](results/norm64_cases.jsonl) · [Run settings](results/norm64_run.json) · [Corpus metrics](results/norm64_text_metrics.csv) |
+| Clock rules, replay and dashboard | [Normalizer](pipeline/clock_normalize.py) · [Numeric checker](pipeline/clock_check.py) · [Scorer](pipeline/score_norm64.py) · [Dashboard builder](pipeline/build_norm64_dashboard.py) |
