@@ -1,6 +1,10 @@
-# Reproduce the NLLB LoRA training run
+# NLLB training recipes
 
-This directory contains the two project scripts used for the first NLLB training run. The model translates Polish, Croatian and Russian to English. One shuffled pass over 300,000 official pairs used rank-8 LoRA on the attention query and value projections, an effective batch of 32, a peak learning rate of 0.0001 and 9,375 optimizer updates. Ukrainian was reserved for evaluation. The [evaluation notebook](../notebooks/evaluate_translation.ipynb) can be run independently on CPU.
+For R4, start with [the training notebook](../notebooks/06_nllb_r4_lora_training.ipynb). It covers both recorded 450-update arms, the loss implementation and a short GPU run on public B01 examples. For the Gemma training loop, see [the 300,000-pair notebook](../notebooks/05_gemma_300k_lora_gpu.ipynb).
+
+## First NLLB training run
+
+The original training and model download scripts are `train_nllb.py` and `model_snapshot.py`. The model translates Polish, Croatian and Russian to English. One shuffled pass over 300,000 official pairs used rank-8 LoRA on the attention query and value projections, an effective batch of 32, a peak learning rate of 0.0001 and 9,375 optimizer updates. Ukrainian was reserved for evaluation. The [evaluation notebook](../notebooks/evaluate_translation.ipynb) can be run independently on CPU.
 
 ## Rebuild and check the input
 

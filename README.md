@@ -23,13 +23,26 @@ After four rounds of LoRA experiments, I tested the final **NLLB + R4 digits** a
 
 ## Run the notebooks
 
-Open any notebook in Colab, select a CPU runtime and choose **Runtime → Run all**. The default examples use Python’s standard library and work without model downloads, credentials or a mounted Drive. Each notebook can also run on its own in Jupyter.
+### Training and benchmarks
+
+Start with **08** to verify the CPU comparison or **06** to inspect the trained adapter. Open a notebook on GitHub to read its saved outputs. In Colab, **Runtime → Run all** replays archived evidence on CPU using the public repository. New training, translation and COMET scoring are opt-in. Each notebook names the hardware, model and data it needs.
+
+| Notebook | What you can reproduce | Colab |
+| --- | --- | --- |
+| [05 · Gemma LoRA on 300,000 pairs](notebooks/05_gemma_300k_lora_gpu.ipynb) | Inspect the PyTorch/PEFT loop, target-token alignment, batching and measured checkpoint results. Repeating the full L4 run requires the verified clean-v2 inputs and authorized Gemma weights. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/05_gemma_300k_lora_gpu.ipynb) |
+| [06 · NLLB R4 training](notebooks/06_nllb_r4_lora_training.ipynb) | Read the two 450-update training histories and inspect the contrastive loss. Try the same trainer on public B01 examples on a GPU. Repeating the historical run requires its original inputs. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/06_nllb_r4_lora_training.ipynb) |
+| [07 · Four-model clock audit and COMET](notebooks/07_norm64_four_model_and_comet.ipynb) | Recalculate exact-time scores for all four systems and mean COMET for the two R4 input formats. Optional cells generate fresh base NLLB and OPUS translations or rescore the saved R4 translations with COMET. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/07_norm64_four_model_and_comet.ipynb) |
+| [08 · INT8 inference on a Colab CPU](notebooks/08_norm64_cpu_int8_benchmark.ipynb) | Recalculate accuracy, latency, peak process RAM and package size from the two archived runs. Fresh inference supports either system and requires the matching R4 adapter or authorized Gemma weights. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/08_norm64_cpu_int8_benchmark.ipynb) |
+
+### CPU walkthroughs
+
+These four notebooks use small embedded examples to explain decisions in the pipeline. Their default cells run with the Python standard library.
 
 | Notebook | What you can check | Colab |
 | --- | --- | --- |
 | [Collect and clean parallel data](notebooks/01_collect_and_clean.ipynb) | Parse Europarl records, preserve meaningful symbols, group by document, and catch text overlap. An optional cell fetches and checks the original archives. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/01_collect_and_clean.ipynb) |
 | [Construct contrast questions](notebooks/02_build_contrast_questions.ipynb) | Change one word in a message, check that the answer flips, and present one version to a reader without showing the answer. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/02_build_contrast_questions.ipynb) |
-| [Compare LoRA experiments](notebooks/03_lora_experiments.ipynb) | Trace a low-rank update and target-token loss on small numerical examples. Compare the recorded results of the NLLB pilot, two matched Gemma runs and the full Gemma run. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/03_lora_experiments.ipynb) |
+| [03 · LoRA walkthrough and experiment ledger](notebooks/03_lora_experiments.ipynb) | Trace a low-rank update and target-token loss on small numerical examples. Follow the saved results from the pilot through R2, R3, R4 and Norm64. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/03_lora_experiments.ipynb) |
 | [Evaluate a translation decision](notebooks/evaluate_translation.ipynb) | Calculate observed COMET changes, then try a synthetic scheduling example where a small wording change alters the recipient’s answer. | [Open in Colab](https://colab.research.google.com/github/Silveroboros-dev/slavic-english-slm/blob/main/notebooks/evaluate_translation.ipynb) |
 
 ## What went into training
@@ -109,7 +122,7 @@ Both models used CTranslate2 4.9.1 (`int8_float32`) with greedy decoding and bat
 
 ## Compute, tokens and workflow
 
-I framed the research question, chose the comparisons and reviewed the failures. Coding agents helped implement the experiments, run checks and prepare the notebooks. Between 20 and 24 November 2026, the project used at least **24 working notebooks** for data preparation, training and evaluation. The count excludes six reader copies and a preliminary Gemma launcher. [Four public notebooks](notebooks/)
+I framed the research question, chose the comparisons and reviewed the failures. Coding agents helped implement the experiments, run checks and prepare the notebooks. Between 20 and 24 November 2026, the project used at least **24 working notebooks** for data preparation, training and evaluation. The count excludes six reader copies and a preliminary Gemma launcher. [Public notebook index](#run-the-notebooks)
 
 | Resource | Recorded use | How it was counted |
 | --- | --- | --- |
@@ -145,6 +158,6 @@ The project began as a capstone for Google DeepMind’s AI Research Foundations 
 | --- | --- |
 | Project proposal and clock experiment | [Research proposal](docs/research-proposal.md) · [Norm64 methods and limitations](docs/norm64.md) |
 | Data preparation and reviewed A/B examples | [Pilot builder](pipeline/build_pilot.py) · [Split verifier](pipeline/verify_pilot.py) · [B01 contrasts](data/b01_contrasts.jsonl) |
-| Colab notebooks and LoRA training | [Four notebooks](#run-the-notebooks) · [NLLB training guide](training/README.md) |
+| Colab notebooks and LoRA training | [Eight notebooks](#run-the-notebooks) · [NLLB training guide](training/README.md) |
 | Recorded translations and metrics | [Norm64 cases](results/norm64_cases.jsonl) · [Run settings](results/norm64_run.json) · [Corpus metrics](results/norm64_text_metrics.csv) |
 | Clock rules, replay and dashboard | [Normalizer](pipeline/clock_normalize.py) · [Numeric checker](pipeline/clock_check.py) · [Scorer](pipeline/score_norm64.py) · [Dashboard builder](pipeline/build_norm64_dashboard.py) |
