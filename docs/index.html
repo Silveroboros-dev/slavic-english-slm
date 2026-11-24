@@ -39,18 +39,26 @@ h2,h3,p{margin:0}h2{font-size:clamp(1.25rem,2vw,1.55rem);line-height:1.25;letter
 .pill-switch{display:inline-flex;border:1px solid #bbc7d1;background:#f4f6f8;border-radius:7px;padding:2px;gap:2px}
 .pill-switch button{border:0;background:transparent;color:var(--muted);font-size:.88rem;font-weight:600;border-radius:4px;padding:5px 10px}
 .pill-switch button[aria-pressed=true]{background:var(--ink);color:#fff}
-.chart{margin-top:10px}
-.bar-row{display:grid;grid-template-columns:minmax(120px,175px) minmax(60px,1fr) minmax(96px,max-content);align-items:center;gap:16px;min-height:39px}
-.bar-row b{font-size:.98rem;font-weight:600}
-.track{height:14px;background:#eaf0f3;border-radius:3px;position:relative;overflow:hidden}
-.track::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(to right,transparent 0,transparent calc(25% - 1px),#fff8 calc(25% - 1px),#fff8 25%)}
-.track i{display:block;height:100%;background:var(--navy);border-radius:3px;position:relative}
-.count{font:650 .99rem/1.4 var(--mono);text-align:right;white-space:nowrap}
-.pct{font:400 .84rem/1.4 var(--mono);color:var(--muted);margin-left:10px}
-.axes{display:grid;grid-template-columns:minmax(120px,175px) minmax(60px,1fr) minmax(96px,max-content);gap:16px;color:var(--muted);font:normal .78rem/1.2 var(--mono);margin-bottom:3px}
-.axes>span{display:flex;justify-content:space-between}.axes::before,.axes::after{content:""}
-.bar-row:first-child b{color:var(--green)}
+.axis-title{margin:16px 0 0;font-size:.88rem;font-weight:650;color:var(--muted)}
+.chart{--plot-height:12rem;position:relative;margin:3rem 0 14px 3.25rem}
+.chart-grid{position:absolute;inset:0 0 auto;height:var(--plot-height);pointer-events:none}
+.chart-grid span{position:absolute;left:0;right:0;bottom:var(--tick);border-top:1px dashed #c7d2db}
+.chart-grid span:first-child{border-top:1px solid #8496a5}
+.chart-grid i{position:absolute;right:calc(100% + 8px);top:0;transform:translateY(-50%);color:var(--muted);font:normal .8rem/1 var(--mono)}
+.chart-columns{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));text-align:center}
+.bar-stage{height:var(--plot-height);position:relative}
+.bar-fill{position:absolute;inset:auto 0 0;margin:auto;width:55%;max-width:112px;height:var(--rate);background:var(--bar-color);border-radius:5px 5px 0 0}
+.chart .count{position:absolute;bottom:var(--rate);transform:translateY(-5px);width:100%;display:flex;justify-content:center;align-items:baseline;flex-wrap:wrap;gap:0 .4rem;color:var(--ink);font:700 1.04rem/1.2 var(--mono)}
+.chart .count small{color:var(--muted);font:normal .85rem/1.25 var(--mono)}
+.bar-label{display:block;padding:.6rem .15rem 0;font-size:1rem;line-height:1.24;text-wrap:balance}
+.bar-role{display:block;margin:.18rem .1rem 0;font-size:.85rem;line-height:1.3;color:var(--muted);text-wrap:balance;overflow-wrap:anywhere}
+.chart-column[data-arm=r4_normalized] .bar-label,.chart-column[data-arm=r4_normalized] .bar-role{color:#06694f;font-weight:700}
 .scope{font-size:.9rem;color:var(--muted);margin:10px 0 0}
+.study-notes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0 0}
+.study-notes section{padding:12px 15px;background:#f3f6f8;border-radius:6px}
+.study-notes section:last-child{background:var(--pale)}
+.study-notes p{margin-top:4px}
+@media(max-width:720px){.study-notes{grid-template-columns:1fr;gap:8px}}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .item{padding:14px 15px;background:#f6f8fa;border-radius:7px;border:1px solid #e0e6eb;overflow-wrap:anywhere}
 .item h3,.field-title{margin-bottom:.45rem;font-weight:650}
@@ -76,15 +84,15 @@ td:first-child,th:first-child{text-align:left;padding-left:0}td:last-child,th:la
 [hidden]{display:none!important}
 #failure{background:#fff3ed;color:#77351b}
 footer{margin:18px 0 0;font-size:.87rem;color:var(--muted)}
-@media(max-width:720px){main,.wrap{width:calc(100% - 32px)}nav{gap:1rem}.grid{grid-template-columns:1fr}.panel{padding:15px}.bar-row,.axes{grid-template-columns:128px minmax(25px,1fr) 92px;gap:9px}.pct{margin-left:5px}.bar-row b{font-size:.9rem}.filters{align-items:flex-start}.section-head,.panel-head{gap:7px}.explorer-controls label{flex-wrap:wrap}}
-@media(max-width:470px){main,.wrap{width:calc(100% - 24px)}.mast{font-size:.77rem}.bar-row,.axes{grid-template-columns:108px minmax(20px,1fr) 64px;gap:7px}.pct{display:none}.count{font-size:.9rem}.panel{padding:13px}.filters{gap:4px}.scope{font-size:.85rem}nav{gap:1.05rem}nav button{font-size:.91rem}.filters label{flex-wrap:wrap}.pill-switch button{padding:4px 8px}}
+@media(max-width:720px){main,.wrap{width:calc(100% - 32px)}nav{gap:1rem}.grid{grid-template-columns:1fr}.panel{padding:15px}.chart .count{flex-direction:column;align-items:center}.filters{align-items:flex-start}.section-head,.panel-head{gap:7px}.explorer-controls label{flex-wrap:wrap}}
+@media(max-width:470px){main,.wrap{width:calc(100% - 24px)}.mast{font-size:.77rem}.chart{--plot-height:10rem;margin-left:2.45rem}.chart-grid i{right:calc(100% + 4px);font-size:.73rem}.chart .count,.bar-label{font-size:.84rem}.bar-role,.chart .count small{font-size:.77rem}.panel{padding:13px}.filters{gap:4px}.scope{font-size:.85rem}nav{gap:1.05rem}nav button{font-size:.91rem}.filters label{flex-wrap:wrap}.pill-switch button{padding:4px 8px}}
 </style>
 </head>
 <body>
 <header><div class="wrap">
 <div class="mast"><span class="brand"><span class="mark" aria-hidden="true"></span>NORM64</span><span>Slavic → English</span></div>
 <h1>From LoRA Fine-Tuning to a Neuro-Symbolic Clock Pipeline</h1>
-<p>Four compact translation systems, tested on everyday messages that differ by one hour.</p>
+<p>Can a small translator preserve what the writer means? Our goal is offline translation on a phone for people who have moved abroad. We wrote pairs of everyday messages to test whether changing a condition changes what the English-speaking reader would do.</p>
 </div></header>
 <div class="nav-shell"><nav class="wrap" aria-label="Research views">
 <button type="button" data-view="benchmark" aria-pressed="true">Benchmark</button>
@@ -100,9 +108,17 @@ footer{margin:18px 0 0;font-size:.87rem;color:var(--muted)}
 </select></label><span id="cohort-size" class="small"></span></div>
 <section id="benchmark" aria-label="Benchmark">
 <article class="panel" id="chart-panel">
-<div class="panel-head"><div><h2>Who kept the appointment time?</h2><p class="subhead" id="plot-note"></p></div>
+<div class="panel-head"><h2 id="chart-title">Could the reader tell exactly when to act?</h2>
 <div class="pill-switch" role="group" aria-label="Clock scoring unit"><button type="button" data-unit="pairs" aria-pressed="true">A/B pairs</button><button type="button" data-unit="messages" aria-pressed="false">Messages</button></div></div>
-<div class="chart" id="bars"></div><div class="axes" aria-hidden="true"><span><i>0%</i><i>50%</i><i>100%</i></span></div>
+<p class="subhead" id="plot-note"></p>
+<p class="axis-title" id="axis-title"></p>
+<div class="chart" role="group" aria-labelledby="chart-title axis-title" aria-describedby="plot-note">
+<div class="chart-grid" aria-hidden="true"><span style="--tick:0%"><i>0%</i></span><span style="--tick:25%"><i>25%</i></span><span style="--tick:50%"><i>50%</i></span><span style="--tick:75%"><i>75%</i></span><span style="--tick:100%"><i>100%</i></span></div>
+<div class="chart-columns" id="bars" role="list"></div></div>
+<div class="study-notes">
+<section><h3>Why train NLLB?</h3><p>One 600M-parameter translation model covers all four source languages with a shared English decoder. We froze its weights and trained a LoRA adapter for it. The resulting system is <strong>NLLB + R4 digits</strong>.</p></section>
+<section><h3>What did the adapter add?</h3><p id="adapter-result"></p></section>
+</div>
 <p class="scope" id="scope"></p>
 </article>
 <article class="panel" id="case-feature"><div class="section-head"><h2 id="feature-title"></h2><span class="tag" id="feature-id"></span></div><div id="feature-body"></div><button class="open-case" id="open-feature" type="button">Inspect this case</button></article>
@@ -190,18 +206,36 @@ const featureCases={
 };
 function renderBenchmark(rows, arms) {
   const pairMode=state.unit==="pairs", numerator=pairMode?"full_pairs":"exact_correct", den=pairMode?"pairs":"variants";
-  byId("plot-note").textContent=pairMode?"Both A and B must give the right, unambiguous time. All four models received digits.":"Each A or B message is scored individually. All four models received digits.";
-  const bars=systems.map(arm=>({arm,pass:arms[arm][numerator],total:arms[arm][den]}))
-    .sort((a,b)=>b.pass/b.total-a.pass/a.total);
-  byId("bars").replaceChildren(...bars.map(({arm,pass,total})=>{
-    const rate=100*pass/total,row=create("div",undefined,"bar-row"),track=create("div",undefined,"track"),fill=create("i");
-    fill.style.width=rate+"%"; fill.style.backgroundColor=colors[arm]; track.setAttribute("aria-hidden","true"); track.append(fill);
-    const count=create("div",formatCount(pass,total),"count");count.append(create("span"," "+rate.toFixed(1)+"%","pct"));
-    row.append(create("b",names[arm]),track,count);return row;
+  byId("plot-note").textContent=pairMode
+    ?"A and B differ by one hour. A scenario passes when both English translations give their respective times unambiguously. All four systems received the same messages with the times in digits."
+    :"Each message passes if its English translation gives the correct, unambiguous time. All four systems received the same times in digits.";
+  byId("axis-title").textContent=pairMode?"A/B scenarios with both times correct (%)":"Individual messages with the exact time correct (%)";
+  const roles={r4_normalized:"Our LoRA adapter",gemma_1b:"Instruction-tuned",nllb_base:"Unadapted baseline",opus:"Compact MT baseline"};
+  byId("bars").replaceChildren(...systems.map(arm=>{
+    const pass=arms[arm][numerator],total=arms[arm][den],rate=100*pass/total;
+    const column=create("div",undefined,"chart-column");
+    column.dataset.arm=arm;
+    column.setAttribute("role","listitem");
+    column.setAttribute("aria-label",names[arm]+", "+roles[arm]+", "+pass+" of "+total);
+    column.style.setProperty("--bar-color",colors[arm]);
+    column.style.setProperty("--rate",rate+"%");
+    const stage=create("div",undefined,"bar-stage"),fill=create("div",undefined,"bar-fill");
+    fill.setAttribute("aria-hidden","true");
+    const percent=Number(rate.toFixed(1))+"%",count=create("div",undefined,"count");
+    count.append(create("span",percent),create("small","("+formatCount(pass,total)+")"));
+    stage.append(fill,count);
+    column.append(stage,create("strong",names[arm],"bar-label"),create("span",roles[arm],"bar-role"));
+    return column;
   }));
+  const base=arms.nllb_base[numerator], trained=arms.r4_normalized[numerator], gemma=arms.gemma_1b[numerator];
+  const total=arms.r4_normalized[den];
+  const unit=pairMode?"scenarios":"messages";
+  const gain=(100*(trained-base)/total).toFixed(1);
+  byId("adapter-result").textContent="On identical inputs with times in digits, NLLB went from "+base+"/"+total+
+    " to "+trained+"/"+total+" "+unit+" correct with R4 (+"+gain+" percentage points). The larger Gemma 3 1B-IT passed "+gemma+"/"+total+".";
   byId("scope").textContent=state.group==="uk"
     ?"Ukrainian had zero fine-tuning pairs. This test supplied a Ukrainian source-normalization rule."
-    :"Paired messages describe the same event at different times. The source rules were developed on this previously examined panel.";
+    :"Blinded agents read the translations for exact time. BLEU measures overlap in wording and appears under Text metrics. We developed the clock rules on this panel.";
   const [id,title]=featureCases[state.group],sample=unique(rows.filter(r=>r.id===id),id);
   byId("feature-title").textContent=title;byId("feature-id").textContent=id;
   const source=create("p",undefined,"field"),sourceLabel=create("strong","English reference · ");
@@ -209,6 +243,9 @@ function renderBenchmark(rows, arms) {
   const cards=create("div",undefined,"grid");
   cards.append(outputCard("r4_normalized",sample.outputs.r4_normalized),outputCard("gemma_1b",sample.outputs.gemma_1b));
   byId("feature-body").replaceChildren(source,cards);
+  if(id==="R4H-HR-02-A"){
+    byId("feature-body").append(create("p","Both translations give 4:30 a.m. What delivery would you expect, and which door would you clear?","note"));
+  }
   const ablations=[["NLLB base","nllb_base_spoken","nllb_base"],["NLLB + R4 digits","r4_spoken","r4_normalized"]];
   byId("ablation").replaceChildren(table(["Model","Colloquial source","Normalized source"],ablations.map(([name,a,b])=>
     [name,formatCount(arms[a][numerator],arms[a][den]),formatCount(arms[b][numerator],arms[b][den])]),[1]));
