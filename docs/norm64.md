@@ -65,6 +65,8 @@ The case file includes both source forms, a reference, six saved outputs per mes
 
 Open `docs/index.html` in a browser. The benchmark counts both variants of a pair within the selected language group. The case explorer uses the case ID, A/B variant and model to retrieve the exact archived translation, blinded clock reading and numeric check. The metric table distinguishes original English notation from the formatting diagnostic. COMET is available for the two original-notation R4 runs.
 
+The [CPU · INT8 view](https://silveroboros-dev.github.io/slavic-english-slm/#cpu-int8) uses a separate [Colab run record](../results/norm64_cpu_int8.json) for the same 64 normalized inputs. It always shows the 24 Polish, Croatian and Russian pairs and the eight Ukrainian pairs separately. Both A and B must preserve the expected clock value. Median and nearest-rank p95 use all 64 end-to-end message timings per model after one warm-up. Peak RAM is the process's maximum resident memory in GiB. Package size includes weights, tokenizer and metadata in decimal MB.
+
 To refresh the embedded snapshot after a data change, run the builder and verify it against the source files. Both commands work offline.
 
 ```sh

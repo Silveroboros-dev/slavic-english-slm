@@ -10,7 +10,7 @@ After four rounds of LoRA experiments, I tested the final **NLLB + R4 digits** a
 
 [![From LoRA Fine-Tuning to a Neuro-Symbolic Clock Pipeline. Percentage of scenarios with both times correct: our NLLB + R4 digits 91.7%, Gemma 75.0%, base NLLB 33.3% and OPUS-MT 4.2%.](docs/norm64-accuracy-columns.png)](https://silveroboros-dev.github.io/slavic-english-slm/)
 
-**[Interactive dashboard](https://silveroboros-dev.github.io/slavic-english-slm/)** · Choose a language, compare the four models or read both versions of a scenario. For offline use, download the [standalone HTML file](https://github.com/Silveroboros-dev/slavic-english-slm/raw/refs/heads/main/docs/index.html) and open it in a browser. [Key research findings](#key-research-findings) · [Benchmark summary](#benchmark-summary) · [Compute, tokens and workflow](#compute-tokens-and-workflow) · [Repository structure](#repository-structure)
+**[Interactive dashboard](https://silveroboros-dev.github.io/slavic-english-slm/)** · Choose a language, compare the four models, or open the [INT8 comparison on a Colab CPU](https://silveroboros-dev.github.io/slavic-english-slm/#cpu-int8). For offline use, download the [standalone HTML file](https://github.com/Silveroboros-dev/slavic-english-slm/raw/refs/heads/main/docs/index.html) and open it in a browser. [Key research findings](#key-research-findings) · [Benchmark summary](#benchmark-summary) · [Compute, tokens and workflow](#compute-tokens-and-workflow) · [Repository structure](#repository-structure)
 
 ## Key research findings
 
@@ -89,6 +89,19 @@ python3 -m unittest discover -s tests -v
 
 [Method and observed failures](docs/norm64.md) · [64 cases, English translations and blinded readings](results/norm64_cases.jsonl) · [Model and run identities](results/norm64_run.json)
 
+### INT8 inference on a Colab CPU
+
+On the same 64 normalized messages, both INT8 models ran on the same two logical CPUs on an Intel Xeon in Google Colab. A pair passed when both English translations preserved the exact clock time. The Ukrainian panel used an explicit normalization rule and zero Ukrainian fine-tuning pairs.
+
+| INT8 model | Polish, Croatian & Russian | Ukrainian | Median per message | p95 per message | Peak RAM (GiB) | Package (MB) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| NLLB + R4 digits | 22/24 | 8/8 | 2.59 s | 3.32 s | 1.47 | 665.7 |
+| Gemma 3 1B-IT | 19/24 | 7/8 | 3.96 s | 4.74 s | 2.55 | 1,047.9 |
+
+R4 kept its overall pair score. It corrected the Polish sourdough instruction to **4:30 a.m.** but moved the Croatian flour delivery from **4:30 a.m. to 4:30 p.m.** Gemma gained one Polish pair over its earlier 18/24. The inference engine also changed between runs, so the comparison cannot isolate the effect of quantization.
+
+Both models used CTranslate2 4.9.1 (`int8_float32`) with greedy decoding and batch size one. After warm-up, each request was timed once from tokenization through the English output. Peak RAM covers the full process. Package size includes weights and tokenizer in decimal MB. Phone performance still needs a device test. [CPU dashboard](https://silveroboros-dev.github.io/slavic-english-slm/#cpu-int8) · [Per-message timings and scoring record](results/norm64_cpu_int8.json)
+
 ## Compute, tokens and workflow
 
 I framed the research question, chose the comparisons and reviewed the failures. Coding agents helped implement the experiments, run checks and prepare the notebooks. Between 20 and 24 November 2026, the project used at least **24 working notebooks** for data preparation, training and evaluation. The count excludes six reader copies and a preliminary Gemma launcher. [Four public notebooks](notebooks/)
@@ -97,7 +110,7 @@ I framed the research question, chose the comparisons and reviewed the failures.
 | --- | --- | --- |
 | Fine-tuning | 9 runs · 20,581 optimizer updates · 656,256 training pairs presented | Six NLLB runs and three Gemma runs. Each repeat of a training pair counts as another presentation. |
 | Training tokens | 56.01M source and target tokens, or 56.42M including the extra contrastive passes | Unpadded tokens across all six NLLB runs and the full Gemma run. The two short Gemma pilots and evaluation decoding are outside this count. |
-| Google Colab | About 6 h 52 min in GPU runtimes and 53 min in CPU runtimes | Reconstructed from recorded execution intervals. The GPU figure includes about 5 h 25 min in training and associated operations. The first NLLB run was timed from checkpoints. |
+| Google Colab | About 6 h 52 min in GPU runtimes and 53 min in CPU runtimes through the original resource audit | Reconstructed from recorded execution intervals. The GPU figure includes about 5 h 25 min in training and associated operations. The first NLLB run was timed from checkpoints. The later INT8 comparison added 7 min 1 s of timed CPU inference. |
 | Codex | 1,330.47M tokens, including 1,311.24M cached input tokens (98.55% of the total) | Up to the start of the 24 November resource audit, the main project chat and its coding agents used 16,496,499 uncached input tokens and generated 2,736,868 output tokens (19.23M combined). External reviewers are outside this count. |
 
 For one directly timed run, **Gemma 3 1B-IT trained on 300,000 pairs in 2 h 11 min 29 s on a single NVIDIA L4**. That timer covered batch preparation, transfer and optimization, including the forward and backward passes. Project records do not establish idle rental time or billed Colab Compute Units. [Gemma training record](results/gemma_run.json)

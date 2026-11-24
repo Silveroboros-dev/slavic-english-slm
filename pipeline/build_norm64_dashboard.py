@@ -11,7 +11,7 @@ import json
 import math
 from pathlib import Path
 import re
-from statistics import mean
+from statistics import mean, median
 
 if __package__:
     from .clock_check import check
@@ -71,6 +71,38 @@ def load_metrics(path, rows):
     return metrics
 
 
+def load_cpu_int8(path, case_digest, rows):
+    """Replay the separate CPU comparison from its per-message results and timings."""
+    record = json.loads(path.read_bytes())
+    if record["case_file_sha256"] != case_digest or set(record["systems"]) != {"nllb_r4", "gemma_1b"}:
+        raise ValueError("CPU run differs from the expected Norm64 panel or systems")
+    case_ids = {row["id"] for row in rows}
+    pairs = {}
+    for row in rows:
+        pairs.setdefault((row["lang"], row["pair_id"]), set()).add(row["id"])
+
+    systems = {}
+    for name, model in record["systems"].items():
+        times = model["latency_ms_by_id"]
+        failures = set(model["failed_clock_ids"])
+        if (times.keys() != case_ids or not failures <= case_ids
+                or len(failures) != len(model["failed_clock_ids"])):
+            raise ValueError(f"CPU message IDs differ from the frozen panel for {name}")
+        timings = sorted(times.values())
+        if not all(math.isfinite(t) and t > 0 for t in timings):
+            raise ValueError(f"Invalid CPU latency for {name}")
+        passed = [lang for (lang, _), ids in pairs.items() if ids.isdisjoint(failures)]
+        systems[name] = {
+            "primary_passed": sum(lang in GROUPS["primary_pl_hr_ru"] for lang in passed),
+            "uk_passed": passed.count("uk"),
+            "median_latency_ms": median(timings),
+            "p95_latency_ms": timings[math.ceil(0.95 * len(timings)) - 1],
+            "peak_process_rss_bytes": model["peak_process_rss_bytes"],
+            "package_bytes": model["package_bytes"],
+        }
+    return {"systems": systems}
+
+
 def build_payload(results=ROOT / "results"):
     """Bind output text, labels, numeric checks and scores to the same dataset release."""
     manifest = json.loads((results / "norm64_run.json").read_bytes())
@@ -112,6 +144,7 @@ def build_payload(results=ROOT / "results"):
             }
         cases.append({**case, "outputs": outputs})
     return {"groups": groups, "cases": cases,
+            "cpu_int8": load_cpu_int8(results / "norm64_cpu_int8.json", manifest["case_file_sha256"], rows),
             "metrics": load_metrics(results / "norm64_text_metrics.csv", rows)}
 
 

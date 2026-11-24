@@ -44,6 +44,31 @@ class DashboardTests(unittest.TestCase):
         self.assertTrue(all(m["mean_comet"] is None for m in self.data["metrics"]
                             if m["prediction_notation"] == "single_clock_HH:MM"))
 
+    def test_cpu_comparison_matches_readme_and_keeps_archived_gemma_score(self):
+        cpu = self.data["cpu_int8"]["systems"]
+        settings = json.loads((RESULTS / "norm64_cpu_int8.json").read_bytes())["settings"]
+        self.assertEqual(
+            (settings["cpu"], settings["intra_threads"], settings["inter_threads"],
+             settings["ctranslate2"], settings["actual_compute_type"], settings["beam_size"], settings["batch_size"]),
+            ("Intel(R) Xeon(R) CPU @ 2.20GHz", 2, 1, "4.9.1", "int8_float32", 1, 1),
+        )
+        readme = (RESULTS.parent / "README.md").read_text(encoding="utf-8")
+        self.assertIn("https://silveroboros-dev.github.io/slavic-english-slm/#cpu-int8", readme)
+        for key, name, primary, ukrainian in [
+            ("nllb_r4", "NLLB + R4 digits", 22, 8),
+            ("gemma_1b", "Gemma 3 1B-IT", 19, 7),
+        ]:
+            with self.subTest(key=key):
+                model = cpu[key]
+                self.assertEqual((model["primary_passed"], model["uk_passed"]), (primary, ukrainian))
+                self.assertIn(
+                    f"| {name} | {primary}/24 | {ukrainian}/8 | "
+                    f"{model['median_latency_ms'] / 1000:.2f} s | {model['p95_latency_ms'] / 1000:.2f} s | "
+                    f"{model['peak_process_rss_bytes'] / 2**30:.2f} | {model['package_bytes'] / 1e6:,.1f} |",
+                    readme,
+                )
+        self.assertEqual(self.data["groups"]["primary"]["arms"]["gemma_1b"]["full_pairs"], 18)
+
     def test_rejects_wrong_manifest_and_incomplete_metrics(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
