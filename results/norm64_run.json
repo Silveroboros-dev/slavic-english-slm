@@ -1,0 +1,95 @@
+{
+  "panel": "Norm64",
+  "authorship": "The 64 source records carry the project provenance label new-agent-authored-outcome-blind. The same cases were subsequently examined during rule development.",
+  "cases": 64,
+  "scenarios": 32,
+  "case_file": "norm64_cases.jsonl",
+  "case_file_sha256": "8c597d695a71ee16261d048d11ae3bdeb68a44828ed2141de136b04df85232c0",
+  "normalized_inputs_sha256": "d3f46eeaff2008cd8064012cfb015332ee71b7c5c52e737a2f45a49a52d05c4c",
+  "decoding": {
+    "num_beams": 1,
+    "do_sample": false,
+    "max_new_tokens": 256
+  },
+  "systems": {
+    "nllb_base": {
+      "model": "facebook/nllb-200-distilled-600M",
+      "revision": "f8d333a098d19b4fd9a8b18f94170487ad3f821d",
+      "weights_sha256": "c266c2cfd19758b6d09c1fc31ecdf1e485509035f6b51dfe84f1ada83eefcc42",
+      "device": "NVIDIA L4",
+      "dtype": "float32",
+      "batch_size": 2,
+      "transformers": "4.57.1"
+    },
+    "r4_normalized": {
+      "base": "nllb_base",
+      "adapter_sha256": "529053d6b875e72483d64dab8b3d8b0e37a7900ebf4683a4e860966f7493b4c0",
+      "device": "NVIDIA L4",
+      "dtype": "float32",
+      "batch_size": 2,
+      "elapsed_generation_seconds": 27.111979174
+    },
+    "r4_spoken": {
+      "base": "nllb_base",
+      "adapter_sha256": "529053d6b875e72483d64dab8b3d8b0e37a7900ebf4683a4e860966f7493b4c0",
+      "device": "Tesla T4",
+      "dtype": "float32",
+      "batch_size": 2
+    },
+    "opus": {
+      "model": "Helsinki-NLP/opus-mt-sla-en",
+      "revision": "90572be08bdc4c58ecbcd2b22ffe167f73992e4a",
+      "weights_sha256": "6cae432ea1e842ace20cdf702ecf8f12c3902280ddff5426b52cdd96319dddad",
+      "device": "NVIDIA L4",
+      "dtype": "float32",
+      "batch_size": 2,
+      "transformers": "4.57.1"
+    },
+    "gemma_1b": {
+      "model": "google/gemma-3/transformers/gemma-3-1b-it/1",
+      "revision": "Kaggle model version ID 282742",
+      "weights_sha256": "3d4ef8d71c14db7e448a09ebe891cfb6bf32c57a9b44499ae0d1c098e48516b6",
+      "chat_template_sha256": "5437d0ad30bb8db69f45cd62c6e02d4269ee617ec9637c9650f8f04051bd9dbc",
+      "prompt": "Translate the following {language} message into English. Return only the translation.",
+      "language_names": {
+        "pl": "Polish",
+        "hr": "Croatian",
+        "ru": "Russian",
+        "uk": "Ukrainian"
+      },
+      "adapter": null,
+      "device": "Intel(R) Xeon(R) CPU @ 2.20GHz",
+      "dtype": "torch.float32",
+      "batch_size": 1,
+      "transformers": "4.57.1",
+      "elapsed_generation_seconds": 747.8835897445679
+    },
+    "nllb_base_spoken": {
+      "base": "nllb_base",
+      "adapter": null,
+      "device": "Tesla T4",
+      "dtype": "float32",
+      "batch_size": 2,
+      "transformers": "4.57.1"
+    }
+  },
+  "clock_check_sha256": "2296cd32cbc3cbca36b4ac0c9fd6022ab7cd2f767f7a8420249e45b96057e44f",
+  "metrics": {
+    "sacrebleu": {
+      "BLEU": "nrefs:1|case:mixed|eff:no|tok:13a|smooth:exp|version:2.5.1",
+      "chrF++": "nrefs:1|case:mixed|eff:yes|nc:6|nw:2|space:no|version:2.5.1"
+    },
+    "comet": {
+      "model": "Unbabel/wmt22-comet-da",
+      "revision": "2760a223ac957f30acfb18c8aa649b01cf1d75f2",
+      "weights_sha256": "e213091cde220f97b89f8bdfa750c458cfea741ad62affb455b59900210ff2af",
+      "source_policy": "Both arms use identical original spoken source and reference; MT only differs.",
+      "versions": {
+        "unbabel-comet": "2.2.7",
+        "transformers": "4.51.3",
+        "torch": "2.6.0+cpu",
+        "pytorch-lightning": "2.2.5"
+      }
+    }
+  }
+}

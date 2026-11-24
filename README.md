@@ -8,6 +8,8 @@ We used LoRA to fine-tune NLLB-200-distilled-600M and Gemma 3 1B-IT on 300,000 o
 
 Both models improved on official texts. On 72 everyday messages, Gemma’s average COMET score fell for Polish, Russian and Ukrainian. It rose for Croatian, though 18 messages leave the size and direction of that change uncertain. The next test asks independent readers what they would do after reading a translation and asks the writer whether that matches their intent. Phone performance also awaits testing. [Results by language](#what-changed-after-training)
 
+In a later clock test, a message about filming nocturnal animals specified **00:30**. Our NLLB adapter translated it as **1:30 p.m.**, thirteen hours late. With the source time written in digits, the adapter preserved the exact time in both messages of **22/24** Polish, Croatian and Russian scenarios. On identical inputs, the original Gemma 3 1B-IT passed **18/24**, base NLLB **8/24** and OPUS-MT **1/24**. A separate Ukrainian panel tested eight more scenarios. [Clock experiment and offline replay](#can-a-recipient-tell-the-exact-time)
+
 ## Historical precedent
 
 In 1990, Brown and colleagues trained a statistical translation model on the Canadian Hansards, the English and French records of parliamentary debates. The model associated the English *Hear, hear!* with the French *Bravo!* because members used both expressions to signal approval in the chamber. [Brown et al., *A Statistical Approach to Machine Translation*](https://aclanthology.org/J90-2002/)
@@ -56,6 +58,32 @@ The last column uses official documents for the three training languages. All th
 Everyday COMET rose only for Croatian, and its paired 95% interval for the change included zero. The [intervals](results/everyday_comet_intervals.csv) use 2,000 paired resamples of 18 messages per language from one training run. The separate 16-case stress set uses questions about the action a reader would take. It has no reference-based scores. Performance on new situations from participants and on phones remains to be measured.
 
 The [full Gemma results](results/metrics.csv) give scores for the base model and the 10k, 50k and 300k checkpoints. For earlier experiments, see the [matched Gemma arms](results/gemma_matched_everyday.csv) and the [NLLB pilot](results/nllb_everyday.csv). These are aggregates over saved translations. The notebooks distinguish measurements from constructed examples.
+
+## Can a recipient tell the exact time?
+
+Each of 32 authored scenarios has two messages about the same event with different start times. A scenario passes when both English translations preserve their respective times unambiguously. We asked two questions.
+
+1. **What does writing the time in digits add?** With colloquial half-hour expressions in the written messages, both base NLLB and NLLB with the R4 digits adapter passed **0/24** Polish, Croatian and Russian scenarios. After converting the time and its daypart to 24-hour digits, base NLLB passed **8/24** and R4 passed **22/24**. On the separate Ukrainian set, the corresponding changes were **0/8 to 4/8** and **0/8 to 8/8**. We kept each model's weights fixed between the two input formats.
+2. **What does the model add once the time is explicit?** All four systems received the same 64 normalized messages and used greedy decoding. The table counts scenarios in which an English reader could recover the exact time from both A and B, using frozen, blinded agent readings.
+
+| Source language | NLLB base | NLLB + R4 digits | OPUS-MT | Gemma 3 1B-IT |
+| --- | ---: | ---: | ---: | ---: |
+| Polish | 2/8 | 7/8 | 0/8 | 5/8 |
+| Croatian | 3/8 | 7/8 | 1/8 | 6/8 |
+| Russian | 3/8 | 8/8 | 0/8 | 7/8 |
+| **Three training languages** | **8/24** | **22/24** | **1/24** | **18/24** |
+| Ukrainian, separate | 4/8 | 8/8 | 0/8 | 7/8 |
+
+Ukrainian contributed zero fine-tuning pairs. We supplied a Ukrainian normalization rule for this test. All four rules were developed for the constructions on this previously examined panel. On one Polish pair, R4 preserved both times but translated the milk tanker's unloading hose as a “snake”.
+
+From the repository root, replay the counts and the numeric checker with Python’s standard library.
+
+```sh
+python3 pipeline/score_norm64.py
+python3 -m unittest discover -s tests -v
+```
+
+[Method and observed failures](docs/norm64.md) · [64 cases, English translations and blinded readings](results/norm64_cases.jsonl) · [Model and run identities](results/norm64_run.json)
 
 ## Rebuild the original pilot
 
