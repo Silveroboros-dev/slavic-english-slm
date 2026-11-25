@@ -22,22 +22,25 @@ class PublicNotebookTests(unittest.TestCase):
                 self.assertIn(f"]({relative})", readme)
                 self.assertIn(f"]({COLAB}{relative})", readme)
 
-    def test_benchmark_defaults_reproduce_their_saved_stdout(self):
-        # All four entry points must work offline from a checkout and leave hardware idle.
-        for path in sorted((ROOT / "notebooks").glob("0[5-8]*.ipynb")):
+    def test_all_defaults_reproduce_their_saved_stdout(self):
+        # Walkthroughs 01–04 and experiment entry points 05–08 all run offline.
+        # Exercise their checked-in defaults, including the seeded example in 02.
+        paths = sorted((ROOT / "notebooks").glob("*.ipynb"))
+        self.assertTrue(paths, "No public notebooks found")
+        for path in paths:
             scope = {"__name__": "__main__"}
             with (
                 patch("sys.path", list(sys.path)),
                 patch.object(Path, "cwd", return_value=ROOT),
-                patch(
-                    "subprocess.run",
-                    side_effect=AssertionError("Unexpected subprocess"),
-                ),
+                patch("subprocess.run", side_effect=AssertionError("Unexpected subprocess")),
+                patch("subprocess.Popen", side_effect=AssertionError("Unexpected subprocess")),
+                patch("socket.create_connection", side_effect=AssertionError("Unexpected network")),
+                patch("socket.socket.connect", side_effect=AssertionError("Unexpected network")),
             ):
-                for cell in json.loads(path.read_text())["cells"]:
+                for index, cell in enumerate(json.loads(path.read_text())["cells"]):
                     if cell["cell_type"] != "code":
                         continue
-                    with self.subTest(notebook=path.name, cell=cell["id"]):
+                    with self.subTest(notebook=path.name, cell=cell.get("id", index)):
                         displayed = "".join(
                             "".join(output["text"])
                             for output in cell["outputs"]

@@ -95,9 +95,10 @@ def validate_rows(rows):
 def epoch_plan(rows, epoch):
     """Cover all conversation+clock once, scatter clock pairs, count all repeats.
 
-    Exactly8 B01/B02 rows form4 intact reviewed pairs/update. Across3 updates each
-    language has32 rows (8 reviewed+24 other). Clock pairs occupy random available
-    slots throughout the epoch; shuffled conversation rows fill remaining slots.
+    Each update includes eight B01/B02 rows from four intact reviewed pairs.
+    Across three updates each language contributes 32 rows (8 reviewed and
+    24 other). Clock pairs take random slots throughout the epoch. Shuffled
+    conversation rows fill the remaining slots.
     Existing conversation rows pad any unused slots. No true row is dropped.
     """
     validate_rows(rows)
